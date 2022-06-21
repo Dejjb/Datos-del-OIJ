@@ -1,0 +1,135 @@
+---
+title: "Datos del OIJ sobre delitos en CR"
+author: "Dennis Jiménez Badilla"
+date: "20/6/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Carga de paquetes
+```{r carga de paquetes, message=FALSE}
+# Carga de paquetes
+
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(readxl)
+library(DT)
+library(lubridate)
+```
+
+# Carga del xls 
+```{r carga de los datos, message=FALSE}
+# Carga del xls 
+
+delitos_cr <- readxl::read_excel("C:/Users/Dennis/Desktop/Rtudio/estadisticaspoliciales2021.xls")
+
+```
+
+# Tabla
+```{r Tabla}
+# Tabla de los delitos cometidos en Costa Rica por delitos, fecha, víctima, edad, género, provincia, cantón y hora.
+
+  delitos_cr %>%
+   select(Delito, 
+         Fecha, 
+         Victima,
+         Edad,
+         Genero,
+         Provincia,
+         Canton,
+         Hora) %>%
+
+  datatable(
+    colnames = c(
+         "Delito", 
+         "Fecha", 
+         "Víctima",
+         "Edad",
+         "Género",
+         "Provincia",
+         "Cantón",
+         "Hora"),
+    options = list(
+    pageLength = 10,
+    language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+  ))
+```
+
+# Grafico de barras simple
+```{r Gráfico de barras, delitos cometidos en CR}
+# Gráfico de barras que muestra los delitos que se cometen en Costa Rica.
+
+ggplot2_delitos_CR <- 
+  delitos_cr %>%
+  count(Delito) %>%
+  ggplot(aes(x = reorder(Delito, n ), y = n)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Delitos cometidos en Costa Rica") +
+  xlab("Delitos") +
+  ylab("Cantidad de delitos") +
+  coord_flip() +
+  theme_minimal()
+
+ggplotly(ggplot2_delitos_CR) %>% config(locale = 'es')
+```
+
+# Grafico de barras simple
+```{r Gráfico de los delitos por mes}
+# Gáfico de barras que muestra la cantidad de delitos que ocurren al mes, Enero a Noviembre
+ggplot2_delitos_por_mes <-
+  delitos_cr %>%
+  group_by(Mes = month(ymd(Fecha), label = TRUE)) %>%
+  ggplot(aes (x= Mes)) +
+  geom_bar() +
+  ggtitle("Cantidad de delitos por mes") +
+  xlab("Mes") +
+  ylab("Cantidad de delitos") +
+  coord_flip() +
+  theme_minimal()
+
+ggplotly(ggplot2_delitos_por_mes) %>% config(locale = 'es')
+```
+# Grafico de barras apilada
+
+```{r Gráfico de barras apiladas, proporción de delitos por Género}
+# Gráfico barras apiladas, muestra la proporción de delitos que ocurren entre los hombres, mujeres y desconocidos.
+
+delitos_por_genero <-
+  delitos_cr%>%
+  ggplot(aes(x = Delito, fill = Genero)) +
+  geom_bar(position = "fill") +
+  ggtitle("Proporcion de delitos por género") +
+  xlab("Delitos") +
+  ylab("Proporción") +
+  labs(fill = "") +
+  coord_flip() +
+theme_minimal()
+ggplotly(delitos_por_genero) %>% config(locale = 'es')
+```
+
+# Grafico de barras simple
+```{r Gráfico de barra, delitos en algunos cantones }
+# Cantidad de delitos en los cantones de San José, Alajuela, Cartago y Heredia.
+
+delito_por_canton <-
+  delitos_cr %>%
+  count(Canton) %>%
+  filter(Canton == "HEREDIA"| Canton == "ALAJUELA"|
+           Canton == "SAN JOSE" | Canton == "CARTAGO") %>%
+  ggplot(aes(x= reorder(Canton, n), y = n)
+         ) +
+  geom_bar( stat = "identity"
+           ) +
+  ggtitle("Delitos cometidos en San Jose, Heredia, Cartago y Alajuela"
+          ) +
+  xlab("Cantón") +
+  ylab("Cantidad de delitos") +
+  coord_flip() +
+  theme_minimal()
+
+ggplotly(delito_por_canton) %>% config(locale = 'es')
+```
